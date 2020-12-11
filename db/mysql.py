@@ -1,6 +1,4 @@
-from sshtunnel import SSHTunnelForwarder
 import pymysql
-import pandas as pd
 
 
 # tunnel = SSHTunnelForwarder(('139.59.112.128', 22), ssh_password='7A19f067z'
@@ -9,11 +7,25 @@ import pandas as pd
 
 class DBHelper:
 
+    __instance__ = None
+
     def __init__(self):
-        self.host = '139.59.112.128'
-        self.user = "root"
-        self.password = '7A19f067z'
-        self.db = "pplotto"
+        """ Constructor.
+        """
+        if DBHelper.__instance__ is None:
+            DBHelper.__instance__ = self
+            self.host = '139.59.112.128'
+            self.user = "root"
+            self.password = '7A19f067z'
+            self.db = "pplotto"
+        else:
+            raise Exception("You cannot create another SingletonGovt class")
+
+    @staticmethod
+    def get_instance():
+        if not DBHelper.__instance__:
+            DBHelper()
+        return DBHelper.__instance__
 
     def __connect__(self):
         self.con = pymysql.connect(host=self.host, user=self.user, password=self.password,
@@ -23,26 +35,26 @@ class DBHelper:
     def __disconnect__(self):
         self.con.close()
 
+    # data = pd.read_sql_query("SHOW DATABASES;", self.con)
     def fetch(self, sql):
-        self.__connect__()
         self.cur.execute(sql)
         result = self.cur.fetchall()
-        self.__disconnect__()
         return result
 
     def execute(self, sql):
-        self.__connect__()
         self.cur.execute(sql)
-        self.__disconnect__()
 
 
-conn = pymysql.connect(host='139.59.112.128', user='root', passwd='7A19f067z')
-data = pd.read_sql_query("SHOW DATABASES;", conn)
-info = pd.read_sql_query("SELECT * FROM pplotto.user;", conn)
-print(data)
-print(info)
+db = DBHelper.get_instance()
+db.__connect__()
+data = db.fetch("SELECT * FROM pplotto.user;")
+db.__disconnect__()
+# conn = pymysql.connect(host='139.59.112.128', user='root', passwd='7A19f067z')
 
-conn.close()
+print(data, type(data[0]))
+# print(info)
+
+# conn.close()
 # tunnel.close()
 
 # if __name__ == '__main__':
