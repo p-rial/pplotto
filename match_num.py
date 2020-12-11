@@ -74,7 +74,7 @@ def main():
     # [1234] - [47] - [05] --> 0=num, 1=per_no, 2=set_no
     mock_path = "/Users/prial/Desktop/pplotto/mock_data"
     temp_ls = get_obj_ls(os.path.join(mock_path, "test1.txt"))
-    temp2_ls = get_obj_ls(os.path.join(mock_path, "p.txt"))
+    temp2_ls = get_obj_ls(os.path.join(mock_path, "test2.txt"))
 
     # uniform_ls = get_obj_ls(os.path.join(mock_path, "uniform.txt"))
     # uniform_pool = NumPool(uniform_ls)
@@ -84,11 +84,6 @@ def main():
     matched_ls = NumPool.match_pool(pool.pool, pool2.pool)
 
     print(matched_ls, len(matched_ls))
-    for i, row in enumerate(pool2.pool[:]):
-        print(f'{i}: {row}')
-        print("---------------------")
-
-    # import pdb; pdb.set_trace()
 
 
 def get_obj_ls(file_path: str):
