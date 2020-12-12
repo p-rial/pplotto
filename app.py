@@ -10,12 +10,29 @@ app = Flask(__name__)
 
 @app.route('/matched', methods=['GET'])
 def get_matched():
-    return request.headers["Authorization"]
+    username = request.headers["Authorization"]
+
+    results = get_num_results(username, method="matched")
+    print(len(results))
+    return {"results": results}
 
 
 @app.route('/unmatched', methods=['GET'])
 def get_unmatched():
-    return request.headers["Authorization"]
+    username = request.headers["Authorization"]
+
+    results = get_num_results(username, method="unmatched")
+    print(len(results))
+    return {"results": results}
+
+
+@app.route('/all', methods=['GET'])
+def get_all():
+    username = request.headers["Authorization"]
+
+    results = get_num_results(username, method="all")
+    print(len(results))
+    return {"results": results}
 
 
 @app.route('/send-num', methods=['POST'])
@@ -68,9 +85,9 @@ def execute_matching():
     if data["username"] != "admin1234" or data["password"] != "1234":
         return {"status": "Unauthorized"}
 
-    pool_matching()
+    response = pool_matching()
 
-    return {"status": True}
+    return {"status": response}
 
 
 @app.route('/delete-num', methods=['DEL'])

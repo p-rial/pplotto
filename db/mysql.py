@@ -78,57 +78,6 @@ def add_user(user: User):
         return f"Error: {sys.exc_info()[1]}"
 
 
-def is_user_existed(username, password):
-    db = DBHelper.get_instance()
-
-    sql = """
-          SELECT EXISTS(SELECT username, password from user 
-          WHERE username= %s and password= %s) as `is_existed`;  
-    """
-
-    try:
-        db.cursor.execute(sql, (username, password))
-        results = db.cursor.fetchall()
-        db.conn.commit()
-        return results[0]["is_existed"], None
-    except Error as e:
-        # TODO: Find way to extract error message out
-        return None, f"Error: {sys.exc_info()[1]}"
-
-
-def submit_nums(username, json_obj):
-    db = DBHelper.get_instance()
-    # TODO: Execute commit only once ?
-    sql_user = """
-          SELECT user_id from user 
-          where username= %s;  
-    """
-    db.cursor.execute(sql_user, username)
-    user_result = db.cursor.fetchall()
-    db.conn.commit()
-
-    if user_result == ():
-        return False
-    else:
-        user_id = user_result[0]["user_id"]
-
-        num_ls = []
-        for item in json_obj["numbers"]:
-            small_ls = item.split("-") + [user_id]
-
-            num_ls.append(small_ls)
-
-        sql_nums = """
-          INSERT INTO `total_num` 
-          (`num`, `per_no`, `set_no`, `user_id`)
-          VALUES(%s, %s, %s, %s) ON duplicate key update count=count+1; 
-        """
-        db.cursor.executemany(sql_nums, num_ls)
-        db.conn.commit()
-
-    return True
-
-
 def pool_matching():
     db = DBHelper.get_instance()
 
@@ -164,6 +113,9 @@ def pool_matching():
     """
     db.cursor.execute(sql_truncate)
 
+    if not matched_ls:
+        db.conn.commit()
+        return "No Matched"
     """
     Save matched result in matched table
     """
@@ -177,3 +129,97 @@ def pool_matching():
     db.cursor.executemany(sql_save_matched, ls_of_tuple)
 
     db.conn.commit()
+
+    return "Done"
+
+
+def is_user_existed(username, password):
+    db = DBHelper.get_instance()
+
+    sql = """
+          SELECT EXISTS(SELECT username, password from user 
+          WHERE username= %s and password= %s) as `is_existed`;  
+    """
+
+    try:
+        db.cursor.execute(sql, (username, password))
+        results = db.cursor.fetchall()
+        db.conn.commit()
+        return results[0]["is_existed"], None
+    except Error as e:
+        # TODO: Find way to extract error message out
+        return None, f"Error: {sys.exc_info()[1]}"
+
+
+def submit_nums(username, json_obj):
+    db = DBHelper.get_instance()
+    # TODO: Execute commit only once ?
+    # TODO: Fix input json_obj
+    sql_user = """
+          SELECT user_id from user 
+          where username= %s;  
+    """
+    db.cursor.execute(sql_user, username)
+    user_result = db.cursor.fetchall()
+    db.conn.commit()
+
+    if user_result == ():
+        return False
+    else:
+        user_id = user_result[0]["user_id"]
+
+        num_ls = []
+        for item in json_obj["numbers"]:
+            small_ls = item.split("-") + [user_id]
+
+            num_ls.append(small_ls)
+
+        sql_nums = """
+          INSERT INTO `total_num` 
+          (`num`, `per_no`, `set_no`, `user_id`)
+          VALUES(%s, %s, %s, %s) ON duplicate key update count=count+1; 
+        """
+        db.cursor.executemany(sql_nums, num_ls)
+        db.conn.commit()
+
+    return True
+
+
+def get_num_results(username, method: str):
+    db = DBHelper.get_instance()
+
+    sql_matched = """
+              SELECT num, per_no, set_no from matched
+              where username= %s;  
+        """
+
+    sql_unmatched = """
+              SELECT t.num, t.per_no, t.set_no
+              FROM total_num t
+              Inner join user u on t.user_id = u.user_id
+              LEFT JOIN matched m ON t.num = m.num and t.set_no = m.set_no
+              where m.per_no is null and u.username = %s;
+        """
+
+    sql_all = """
+                  SELECT num, per_no, set_no from total_num t
+                  Inner join user u on t.user_id = u.user_id 
+                  where username= %s;  
+            """
+
+    sql_dict = {
+        "matched": sql_matched,
+        "unmatched": sql_unmatched,
+        "all": sql_all
+    }
+
+    db.cursor.execute(sql_dict[method], username)
+    results = db.cursor.fetchall()
+
+    if results == ():
+        return []
+    else:
+
+        db.conn.commit()
+
+        return results
