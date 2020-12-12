@@ -185,6 +185,35 @@ def submit_nums(username, json_obj):
     return True
 
 
+def remove_nums(username, obj_ls):
+    db = DBHelper.get_instance()
+    # TODO: Execute commit only once ?
+    # TODO: Fix input json_obj
+    sql_user = """
+              SELECT user_id from user 
+              where username= %s;  
+        """
+    db.cursor.execute(sql_user, username)
+    user_result = db.cursor.fetchall()
+
+    if user_result == ():
+        return False
+    else:
+        # user_id = user_result[0]["user_id"]
+
+        num_ls = [(item["num"], item["per_no"], item["set_no"])
+                  for item in obj_ls["numbers"]]
+
+        sql_nums = """
+              DELETE FROM `total_num` 
+              WHERE num = %s and per_no = %s and set_no = %s;
+            """
+        db.cursor.executemany(sql_nums, num_ls)
+        db.conn.commit()
+
+    return True
+
+
 def get_num_results(username, method: str):
     db = DBHelper.get_instance()
 

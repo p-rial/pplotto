@@ -13,7 +13,7 @@ def get_matched():
     username = request.headers["Authorization"]
 
     results = get_num_results(username, method="matched")
-    print(len(results))
+    print(f'{username}-Amount : {len(results)}')
     return {"results": results}
 
 
@@ -22,7 +22,7 @@ def get_unmatched():
     username = request.headers["Authorization"]
 
     results = get_num_results(username, method="unmatched")
-    print(len(results))
+    print(f'{username}-Amount : {len(results)}')
     return {"results": results}
 
 
@@ -31,7 +31,7 @@ def get_all():
     username = request.headers["Authorization"]
 
     results = get_num_results(username, method="all")
-    print(len(results))
+    print(f'{username}-Amount : {len(results)}')
     return {"results": results}
 
 
@@ -90,9 +90,15 @@ def execute_matching():
     return {"status": response}
 
 
-@app.route('/delete-num', methods=['DEL'])
+@app.route('/delete-num', methods=['POST'])
 def delete_nums():
-    pass
+    username = request.headers["Authorization"]
+    # print(username)
+    data = request.get_json()
+
+    status = remove_nums(username, data)
+
+    return {"status": status}
 
 
 @app.route('/update-info', methods=['PUT'])
