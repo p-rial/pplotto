@@ -2,13 +2,15 @@ from typing import List
 
 import pymysql
 import sys
+from pprint import pprint
 
 # tunnel = SSHTunnelForwarder(('139.59.112.128', 22), ssh_password='7A19f067z'
 #                             , ssh_username='root', remote_bind_address=('139.59.112.128', 3306))
 # tunnel.start()
 from pymysql import Error
 
-from models import User
+from match_num import NumPool
+from models import User, LottoNum
 
 
 class DBHelper:
@@ -96,7 +98,7 @@ def is_user_existed(username, password):
 
 def submit_nums(username, json_obj):
     db = DBHelper.get_instance()
-
+    # TODO: Execute commit only once ?
     sql_user = """
           SELECT user_id from user 
           where username= %s;  
@@ -125,3 +127,53 @@ def submit_nums(username, json_obj):
         db.conn.commit()
 
     return True
+
+
+def pool_matching():
+    db = DBHelper.get_instance()
+
+    # TODO: Handle case 'total_num' table is empty
+
+    # TODO: Query two times for different per_no for two pools
+    """
+        Query all number out
+    """
+    sql_get_all = """
+              SELECT num, per_no, set_no, username 
+              from total_num inner join user 
+              on total_num.user_id = user.user_id;  
+        """
+    db.cursor.execute(sql_get_all)
+    results = db.cursor.fetchall()
+
+    """
+        Matching logic perform here
+    """
+    to_lottoNum: List[LottoNum] = [LottoNum(**item) for item in results]
+
+    total_pool = NumPool(to_lottoNum)
+
+    matched_ls = total_pool.self_match()
+
+    """
+        Truncate matched table
+    """
+
+    sql_truncate = """
+        truncate table matched;
+    """
+    db.cursor.execute(sql_truncate)
+
+    """
+    Save matched result in matched table
+    """
+    sql_save_matched = """
+              INSERT INTO `matched` 
+              (`num`, `per_no`, `set_no`, `username`)
+              VALUES(%s, %s, %s, %s) ON duplicate key update count=count+1; 
+            """
+
+    ls_of_tuple = [obj.to_tuple() for obj in matched_ls]
+    db.cursor.executemany(sql_save_matched, ls_of_tuple)
+
+    db.conn.commit()

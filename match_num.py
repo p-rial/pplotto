@@ -1,5 +1,4 @@
 import re
-from dataclasses import dataclass
 from typing import List
 import numpy as np
 import os
@@ -130,11 +129,11 @@ def main():
     """
     Matching between pools
     """
-    # matched_ls = NumPool.match_pool(pool.pool, pool2.pool)
+    matched_ls = NumPool.match_pool(pool.pool, pool2.pool)
 
     # matched_ls = NumPool.match_pool_test(user_ls, user2_ls)
 
-    matched_ls = pool2.self_match()
+    # matched_ls = pool2.self_match()
 
     """
     Printing results out

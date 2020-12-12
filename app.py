@@ -63,7 +63,14 @@ def sign_up():
 def execute_matching():
     if request.headers["Authorization"] != "pplotto112403":
         return {"status": "Unauthorized"}
-    pass
+    data = request.get_json()
+
+    if data["username"] != "admin1234" or data["password"] != "1234":
+        return {"status": "Unauthorized"}
+
+    pool_matching()
+
+    return {"status": True}
 
 
 @app.route('/delete-num', methods=['DEL'])
