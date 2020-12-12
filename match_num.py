@@ -5,12 +5,7 @@ import numpy as np
 import os
 from pprint import pprint
 
-
-@dataclass
-class LottoNum:
-    num: str
-    per_no: str
-    set_no: str
+from models import LottoNum
 
 
 class NumPool:
@@ -111,11 +106,11 @@ class NumPool:
 def main():
     # [1234] - [47] - [05] --> 0=num, 1=per_no, 2=set_no
     """
-    Load real mock data
+    Load mock data
     """
     mock_path = "/Users/prial/Desktop/pplotto/mock_data"
-    user_ls: List[LottoNum] = get_obj_ls(os.path.join(mock_path, "user1.txt"))
-    user2_ls: List[LottoNum] = get_obj_ls(os.path.join(mock_path, "user2.txt"))
+    user_ls: List[LottoNum] = get_obj_ls("p", os.path.join(mock_path, "user1.txt"))
+    user2_ls: List[LottoNum] = get_obj_ls("kob", os.path.join(mock_path, "user2.txt"))
     # user3_ls = get_obj_ls(os.path.join(mock_path, "user3.txt"))
     # user4_ls = get_obj_ls(os.path.join(mock_path, "user4.txt"))
     # user5_ls = get_obj_ls(os.path.join(mock_path, "user5.txt"))
@@ -135,12 +130,11 @@ def main():
     """
     Matching between pools
     """
-    matched_ls = NumPool.match_pool(pool.pool, pool2.pool)
+    # matched_ls = NumPool.match_pool(pool.pool, pool2.pool)
 
     # matched_ls = NumPool.match_pool_test(user_ls, user2_ls)
 
-    # matched_ls = pool2.self_match()
-
+    matched_ls = pool2.self_match()
 
     """
     Printing results out
@@ -149,16 +143,20 @@ def main():
     print(len(matched_ls))
 
 
-def get_obj_ls(file_path: str) -> List[LottoNum]:
+def get_obj_ls(username: str, file_path: str) -> List[LottoNum]:
     temp_file = open(file_path, 'r')
 
     num_ls = []
     for line in temp_file.readlines():
         ls = ls = re.sub('[\n]', '', line).split('-')
-        num_ls.append(LottoNum(num=ls[0], per_no=ls[1], set_no=ls[2]))
+        num_ls.append(LottoNum(username=username, num=ls[0], per_no=ls[1], set_no=ls[2]))
 
     return num_ls
 
 
 if __name__ == '__main__':
     main()
+
+    # d = {"num": "1234", "per_no": "47", "set_no": "32"}
+    # temp = LottoNum(**d)
+    # print(temp)

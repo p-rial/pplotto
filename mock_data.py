@@ -2,7 +2,6 @@ from random import choice
 
 import numpy as np
 from pprint import pprint
-import pickle
 
 
 # possible pattern is 1 million
@@ -48,6 +47,7 @@ def gen_mock_real_data():
     #             set_str = "0" + set_str
     #
     #         num_ls.append(f"{num_str}-{per_no}-{set_str}")
+
 
 def gen_mock_data_uniform(num: str, per_no: str):
     num_ls = []
