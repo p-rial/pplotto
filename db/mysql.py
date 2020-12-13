@@ -39,7 +39,6 @@ class DBHelper:
     def __connect__(self):
         self.conn = pymysql.connect(host=self.host, user=self.user, password=self.password,
                                     db=self.db, cursorclass=pymysql.cursors.DictCursor)
-        self.cursor = self.conn.cursor()
 
     def __disconnect__(self):
         self.conn.close()
@@ -64,23 +63,25 @@ class DBHelper:
 
 def add_user(user: User):
     db = DBHelper.get_instance()
-
+    cursor = db.conn.cursor()
     sql = """
           INSERT INTO `user` 
           (`username`, `password`, `name`, `surname`, `phone`)
           VALUES(%s, %s, %s, %s, %s);
     """
     try:
-        db.cursor.execute(sql, ({user.username}, {user.password}, {user.name}, {user.surname}, {user.phone}))
+        cursor.execute(sql, ({user.username}, {user.password}, {user.name}, {user.surname}, {user.phone}))
         db.conn.commit()
+        cursor.close()
     except Error as e:
         # TODO: Find way to extract error message out
+        cursor.close()
         return f"Error: {sys.exc_info()[1]}"
 
 
 def pool_matching():
     db = DBHelper.get_instance()
-
+    cursor = db.conn.cursor()
     # TODO: Handle case 'total_num' table is empty
 
     # TODO: Query two times for different per_no for two pools
@@ -92,8 +93,8 @@ def pool_matching():
               from total_num inner join user 
               on total_num.user_id = user.user_id;  
         """
-    db.cursor.execute(sql_get_all)
-    results = db.cursor.fetchall()
+    cursor.execute(sql_get_all)
+    results = cursor.fetchall()
 
     """
         Matching logic perform here
@@ -111,10 +112,11 @@ def pool_matching():
     sql_truncate = """
         truncate table matched;
     """
-    db.cursor.execute(sql_truncate)
+    cursor.execute(sql_truncate)
 
     if not matched_ls:
         db.conn.commit()
+        cursor.close()
         return "No Matched"
     """
     Save matched result in matched table
@@ -126,28 +128,31 @@ def pool_matching():
             """
 
     ls_of_tuple = [obj.to_tuple() for obj in matched_ls]
-    db.cursor.executemany(sql_save_matched, ls_of_tuple)
+    cursor.executemany(sql_save_matched, ls_of_tuple)
 
     db.conn.commit()
+    cursor.close()
 
     return "Done"
 
 
 def is_user_existed(username, password):
     db = DBHelper.get_instance()
-
+    cursor = db.conn.cursor()
     sql = """
           SELECT EXISTS(SELECT username, password from user 
           WHERE username= %s and password= %s) as `is_existed`;  
     """
 
     try:
-        db.cursor.execute(sql, (username, password))
-        results = db.cursor.fetchall()
+        cursor.execute(sql, (username, password))
+        results = cursor.fetchall()
         db.conn.commit()
+        cursor.close()
         return results[0]["is_existed"], None
     except Error as e:
         # TODO: Find way to extract error message out
+        cursor.close()
         return None, f"Error: {sys.exc_info()[1]}"
 
 
@@ -155,15 +160,17 @@ def submit_nums(username, json_obj):
     db = DBHelper.get_instance()
     # TODO: Execute commit only once ?
     # TODO: Fix input json_obj
+    cursor = db.conn.cursor()
     sql_user = """
           SELECT user_id from user 
           where username= %s;  
     """
-    db.cursor.execute(sql_user, username)
-    user_result = db.cursor.fetchall()
+    cursor.execute(sql_user, username)
+    user_result = cursor.fetchall()
     db.conn.commit()
 
     if user_result == ():
+        cursor.close()
         return False
     else:
         user_id = user_result[0]["user_id"]
@@ -179,24 +186,27 @@ def submit_nums(username, json_obj):
           (`num`, `per_no`, `set_no`, `user_id`)
           VALUES(%s, %s, %s, %s) ON duplicate key update count=count+1; 
         """
-        db.cursor.executemany(sql_nums, num_ls)
+        cursor.executemany(sql_nums, num_ls)
         db.conn.commit()
+        cursor.close()
 
     return True
 
 
 def remove_nums(username, obj_ls):
     db = DBHelper.get_instance()
+    cursor = db.conn.cursor()
     # TODO: Execute commit only once ?
     # TODO: Fix input json_obj
     sql_user = """
               SELECT user_id from user 
               where username= %s;  
         """
-    db.cursor.execute(sql_user, username)
-    user_result = db.cursor.fetchall()
+    cursor.execute(sql_user, username)
+    user_result = cursor.fetchall()
 
     if user_result == ():
+        cursor.close()
         return False
     else:
         # user_id = user_result[0]["user_id"]
@@ -208,14 +218,16 @@ def remove_nums(username, obj_ls):
               DELETE FROM `total_num` 
               WHERE num = %s and per_no = %s and set_no = %s;
             """
-        db.cursor.executemany(sql_nums, num_ls)
+        cursor.executemany(sql_nums, num_ls)
         db.conn.commit()
+        cursor.close()
 
     return True
 
 
 def get_num_results(username, method: str):
     db = DBHelper.get_instance()
+    cursor = db.conn.cursor()
 
     sql_matched = """
               SELECT num, per_no, set_no from matched
@@ -242,13 +254,15 @@ def get_num_results(username, method: str):
         "all": sql_all
     }
 
-    db.cursor.execute(sql_dict[method], username)
-    results = db.cursor.fetchall()
+    cursor.execute(sql_dict[method], username)
+    results = cursor.fetchall()
 
     if results == ():
+        cursor.close()
         return []
     else:
 
         db.conn.commit()
+        cursor.close()
 
         return results

@@ -49,8 +49,9 @@ def send_nums():
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
+    print(data)
     result, error = is_user_existed(data["username"], data["password"])
-
+    print(f"Result: {result}, error: {error}")
     if result is None:
         return {"status": error}
 
