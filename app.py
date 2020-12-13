@@ -109,7 +109,13 @@ def update_info():
 
 def mock_num_body_request(filename):
     f_num = open(f"/Users/prial/Desktop/pplotto/mock_data/{filename}.txt", "r")
-    num_ls = f_num.read().split('\n')
+    temp_ls = f_num.read().split('\n')
+
+    num_ls = []
+    for item in temp_ls:
+        ls = item.split("-")
+        num_ls.append({"num": ls[0], "per_no": ls[1], "set_no": ls[2]})
+
     return {"numbers": num_ls}
 
 
