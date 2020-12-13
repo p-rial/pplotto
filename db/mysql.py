@@ -32,7 +32,6 @@ class DBHelper:
             DBHelper()
         return DBHelper.__instance__
 
-    # cursorclass = pymysql.cursors.DictCursor
     @staticmethod
     def to_connect():
         return pymysql.connections.Connection(
@@ -73,28 +72,11 @@ class DBHelper:
     def __disconnect__(self):
         self.conn.close()
 
-    # data = pd.read_sql_query("SHOW DATABASES;", self.con)
-    # def fetch(self, sql):
-    #     self.cur.execute(sql)
-    #     result = self.cur.fetchall()
-    #     return result
-    #
-    # def execute(self, sql):
-    #     self.cur.execute(sql)
-
-
-# db = DBHelper.get_instance()
-# db.__connect__()
-# data = db.fetch("SELECT * FROM pplotto.user;")
-# db.__disconnect__()
-
-
-# conn = pymysql.connect(host='139.59.112.128', user='root', passwd='7A19f067z')
 
 def add_user(user: User):
     db = DBHelper.get_instance()
     db.is_connected()
-    # cursor = db.conn.cursor()
+
     sql = """
           INSERT INTO `user` 
           (`username`, `password`, `name`, `surname`, `phone`)
@@ -111,10 +93,10 @@ def add_user(user: User):
 def pool_matching():
     db = DBHelper.get_instance()
     db.is_connected()
-    # cursor = db.conn.cursor()
+
     # TODO: Handle case 'total_num' table is empty
 
-    # TODO: Query two times for different per_no for two pools
+    # TODO: Query two times for different per_no of two pools
     """
         Query all number out
     """
@@ -123,7 +105,6 @@ def pool_matching():
               from total_num inner join user 
               on total_num.user_id = user.user_id;  
         """
-    # cursor.execute(sql_get_all)
     results = db.query(sql_get_all)
 
     if results == ():
@@ -171,7 +152,7 @@ def pool_matching():
 def is_user_existed(username, password):
     db = DBHelper.get_instance()
     db.is_connected()
-    # cursor = db.conn.cursor()
+
     sql = """
           SELECT EXISTS(SELECT username, password from user 
           WHERE username= %s and password= %s) as `is_existed`;  
@@ -190,14 +171,11 @@ def submit_nums(username, obj_ls):
     db = DBHelper.get_instance()
     db.is_connected()
 
-    # cursor = db.conn.cursor()
     sql_user = """
           SELECT user_id from user 
           where username= %s;  
     """
     user_result = db.query(sql_user, username)
-    # user_result = cursor.fetchall()
-    # db.conn.commit()
 
     if user_result == ():
         return False
@@ -208,11 +186,6 @@ def submit_nums(username, obj_ls):
             (item["num"], item["per_no"], item["set_no"], user_id)
             for item in obj_ls["numbers"]
         ]
-
-        # for item in json_obj["numbers"]:
-        #     small_ls = item.split("-") + [user_id]
-        #
-        #     num_ls.append(small_ls)
 
         sql_nums = """
           INSERT INTO `total_num` 
@@ -228,19 +201,16 @@ def submit_nums(username, obj_ls):
 def remove_nums(username, obj_ls):
     db = DBHelper.get_instance()
     db.is_connected()
-    # cursor = db.conn.cursor()
 
     sql_user = """
               SELECT user_id from user 
               where username= %s;  
         """
     user_result = db.query(sql_user, username)
-    # user_result = cursor.fetchall()
 
     if user_result == ():
         return False
     else:
-        # user_id = user_result[0]["user_id"]
 
         num_ls = [
             (item["num"], item["per_no"], item["set_no"])
@@ -260,7 +230,6 @@ def remove_nums(username, obj_ls):
 def get_num_results(username, method: str):
     db = DBHelper.get_instance()
     db.is_connected()
-    # cursor = db.conn.cursor()
 
     sql_matched = """
               SELECT num, per_no, set_no from matched
@@ -287,8 +256,6 @@ def get_num_results(username, method: str):
         "all": sql_all
     }
 
-    # cursor.execute(sql_dict[method], username)
-    # results = cursor.fetchall()
     results = db.query(sql_dict[method], username)
 
     if results == ():
