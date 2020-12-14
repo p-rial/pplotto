@@ -120,14 +120,17 @@ def mock_num_body_request(filename):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
     # user1 = "p1234"
     # user2 = "pan1234"
+    # user3 = "kob1234"
     #
-    # user_obj = mock_num_body_request("user1")
-    # user2_obj = mock_num_body_request("user2")
+    # user_obj = mock_num_body_request("user3")
+    # user2_obj = mock_num_body_request("user4")
+    # user3_obj = mock_num_body_request("user5")
     #
     # status = submit_nums(user1, user_obj)
     # status2 = submit_nums(user2, user2_obj)
+    # status3 = submit_nums(user3, user3_obj)
     #
-    # print(f"Status: {status}, Status2: {status2}")
+    # print(f"Status: {status}, Status2: {status2}, Status3: {status3}")

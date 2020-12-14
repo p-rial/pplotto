@@ -1,9 +1,13 @@
+import json
 import traceback
 from typing import List
 
 import pymysql
 import sys
 from pprint import pprint
+
+# with open("/etc/config.json") as config_file:
+#     config = json.load(config_file)
 
 # tunnel = SSHTunnelForwarder(('139.59.112.128', 22), ssh_password='7A19f067z'
 #                             , ssh_username='root', remote_bind_address=('139.59.112.128', 3306))
@@ -94,8 +98,6 @@ def pool_matching():
     db = DBHelper.get_instance()
     db.is_connected()
 
-    # TODO: Handle case 'total_num' table is empty
-
     # TODO: Query two times for different per_no of two pools
     """
         Query all number out
@@ -111,13 +113,30 @@ def pool_matching():
         return "Pool is empty!!"
 
     """
+        Separate num into two pools
+    """
+    to_lottonum_quota, to_lottonum_post = [], []
+
+    for item in results:
+        if int(item["per_no"]) % 2 != 0:
+            # if per_no is odd, num categorize as 'Quota lotto'
+            to_lottonum_quota.append(LottoNum(**item))
+        else:
+            # if per_no is even, num categorize as 'Post Office lotto'
+            to_lottonum_post.append(LottoNum(**item))
+
+    """
         Matching logic perform here
     """
-    to_lottoNum: List[LottoNum] = [LottoNum(**item) for item in results]
+    # to_lottoNum: List[LottoNum] = [LottoNum(**item) for item in results]
 
-    total_pool = NumPool(to_lottoNum)
+    total_pool_quota = NumPool(to_lottonum_quota)
+    total_pool_post = NumPool(to_lottonum_post)
 
-    matched_ls = total_pool.self_match()
+    matched_ls_quota = total_pool_quota.self_match()
+    matched_ls_post = total_pool_post.self_match()
+
+    total_matched_ls = matched_ls_quota + matched_ls_post
 
     """
         Truncate matched table
@@ -128,7 +147,7 @@ def pool_matching():
     """
     db.query(sql_truncate)
 
-    if not matched_ls:
+    if not total_matched_ls:
         db.save_changes()
         return "No Matched"
 
@@ -141,7 +160,7 @@ def pool_matching():
               VALUES(%s, %s, %s, %s) ON duplicate key update count=count+1; 
             """
 
-    ls_of_tuple = [obj.to_tuple() for obj in matched_ls]
+    ls_of_tuple = [obj.to_tuple() for obj in total_matched_ls]
     db.query_many(sql_save_matched, ls_of_tuple)
 
     db.save_changes()
