@@ -190,6 +190,9 @@ def submit_nums(username, obj_ls):
     db = DBHelper.get_instance()
     db.is_connected()
 
+    if not bool(get_configs()):
+        return "INPUT CLOSED"
+
     sql_user = """
           SELECT user_id from user 
           where username= %s;  
@@ -283,3 +286,21 @@ def get_num_results(username, method: str):
         db.save_changes()
 
         return results
+
+
+def get_configs():
+    db = DBHelper.get_instance()
+    db.is_connected()
+
+    sql_config = """
+                  SELECT * from admin_config
+                  where name = "input_status";
+            """
+
+    results = db.query(sql_config)
+    # import pdb; pdb.set_trace()
+    db.save_changes()
+
+    return results[0]["status"]
+
+

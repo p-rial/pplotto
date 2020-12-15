@@ -102,6 +102,14 @@ def delete_nums():
     return {"status": status}
 
 
+@app.route('/input-status', methods=['GET'])
+def get_input_status():
+    status: int = get_configs()
+    print(f"Status: {status}")
+
+    return {"status": bool(status)}
+
+
 @app.route('/update-info', methods=['PUT'])
 def update_info():
     pass
