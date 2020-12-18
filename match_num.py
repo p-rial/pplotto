@@ -20,9 +20,9 @@ class NumPool:
 
             # print(f'Num:{obj.num}-{obj.set_no}, Row:{row_index}, Col:{col_index}')
             if self.pool[row_index][col_index] is None:
-                self.pool[row_index][col_index] = f"{obj.num}-{obj.set_no},"
+                self.pool[row_index][col_index] = [obj]
             else:
-                self.pool[row_index][col_index] += f"{obj.num}-{obj.set_no},"
+                self.pool[row_index][col_index] += [obj]
 
             self.size += 1
 
@@ -35,11 +35,15 @@ class NumPool:
 
             row_index, col_index = self.get_pool_pos(obj)
 
-            pool_value = self.pool[row_index][col_index]
-            for value in NumPool.str_to_list(pool_value):
+            pool_value: List[LottoNum] = self.pool[row_index][col_index]
+            for value in pool_value:
 
-                value1, value2 = value.split("-")
-                if obj.num == value1 and obj.set_no != value2:
+                # TODO: Have two ifs for each comparing;
+                #  if nums have the same owner, ignore it
+                #  if 4-digit nums matched, append to list
+                if obj.username == value.username:
+                    continue
+                if obj.num == value.num and obj.set_no != value.set_no:
                     matched_ls.append(obj)
 
         return matched_ls
@@ -56,7 +60,7 @@ class NumPool:
 
         return row_index, col_index
 
-    # TODO: Return as LottoNum obj would be better.
+    # TODO: This func need to be fixed to use the same matching logic as self.match
     # self.pool.size < another_pool.size --> For better execution time
     @staticmethod
     def match_pool(small_pool: np.array, big_pool: np.array) -> List[str]:
@@ -75,6 +79,7 @@ class NumPool:
                         matched_ls.append(num)
         return matched_ls
 
+    # TODO: This func need to be fixed to use the same matching logic as self.match
     @staticmethod
     def match_pool_test(num_obj_ls, num_obj_ls2):
         """
@@ -110,8 +115,8 @@ def main():
     mock_path = "/Users/prial/Desktop/pplotto/mock_data"
     user_ls: List[LottoNum] = get_obj_ls("p", os.path.join(mock_path, "user1.txt"))
     user2_ls: List[LottoNum] = get_obj_ls("kob", os.path.join(mock_path, "user2.txt"))
-    # user3_ls = get_obj_ls(os.path.join(mock_path, "user3.txt"))
-    # user4_ls = get_obj_ls(os.path.join(mock_path, "user4.txt"))
+    user3_ls = get_obj_ls("pan", os.path.join(mock_path, "user3.txt"))
+    user4_ls = get_obj_ls("mom", os.path.join(mock_path, "user4.txt"))
     # user5_ls = get_obj_ls(os.path.join(mock_path, "user5.txt"))
 
     # uniform_ls = get_obj_ls(os.path.join(mock_path, "uniform.txt"))
@@ -120,8 +125,8 @@ def main():
     """
     Instantiate pool obj
     """
-    pool = NumPool(user_ls)
-    pool2 = NumPool(user2_ls)
+    pool = NumPool(user_ls + user2_ls + user3_ls)
+    # pool2 = NumPool(user2_ls)
     # pool3 = NumPool(user3_ls)
     # pool4 = NumPool(user4_ls)
     # pool5 = NumPool(user5_ls)
@@ -129,11 +134,11 @@ def main():
     """
     Matching between pools
     """
-    matched_ls = NumPool.match_pool(pool.pool, pool2.pool)
+    # matched_ls = NumPool.match_pool(pool.pool, pool2.pool)
 
     # matched_ls = NumPool.match_pool_test(user_ls, user2_ls)
 
-    # matched_ls = pool2.self_match()
+    matched_ls = pool.self_match()
 
     """
     Printing results out
